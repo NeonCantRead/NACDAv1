@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Twitch Clip Assistant</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Neon's Awesome Clip Download Assistant</h2>
+        
+        <!-- Key Entry Screen -->
+        <div id="keyEntryScreen">
+            <div class="input-group">
+                <label for="decryptionKey">Enter Decryption Key:</label>
+                <div class="input-with-toggle">
+                    <input type="password" id="decryptionKey" placeholder="Enter your decryption key">
+                    <button type="button" class="toggle-visibility" data-target="decryptionKey">👁️</button>
+                </div>
+            </div>
+            <button id="unlockButton" class="btn btn-primary btn-full">Unlock</button>
+            <button id="deleteDataButton" class="btn btn-danger btn-full" style="display: none; margin-top: 10px;">Delete Data</button>
+            <div id="keyStatusMessage" class="status-message"></div>
+        </div>
+        
+        <!-- Main Interface (hidden by default) -->
+        <div id="mainInterface" style="display: none;">
+            <!-- Collapsible Credentials Section -->
+            <div class="collapsible-section">
+                <button class="collapsible-header" id="credentialsToggle">
+                    <span>Credentials</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="collapsible-content" id="credentialsContent">
+                    <div class="input-group">
+                        <label for="appId">App ID:</label>
+                        <div class="input-with-toggle">
+                            <input type="password" id="appId" placeholder="Enter App ID">
+                            <button type="button" class="toggle-visibility" data-target="appId">👁️</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="oauthToken">Oauth Token:</label>
+                        <div class="input-with-toggle">
+                            <input type="password" id="oauthToken" placeholder="Enter Oauth Token">
+                            <button type="button" class="toggle-visibility" data-target="oauthToken">👁️</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="editorId">Editor ID:</label>
+                        <input type="text" id="editorId" placeholder="Enter Editor ID">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Collapsible Filtering Options Section -->
+            <div class="collapsible-section">
+                <button class="collapsible-header" id="filteringToggle">
+                    <span>Filtering Options</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="collapsible-content" id="filteringContent">
+                    <div class="input-group">
+                        <label for="accountList">Account List (comma-separated):</label>
+                        <input type="text" id="accountList" placeholder="e.g., user1, user2, (leave empty for no filter)">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="toggle-label">
+                            <span class="toggle-text">List Mode: <span id="listModeText">Blacklist</span></span>
+                            <label class="switch">
+                                <input type="checkbox" id="listModeToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="maxGap">Max Acceptable Gap (seconds):</label>
+                        <input type="number" id="maxGap" placeholder="0" min="0" step="1" value="0">
+                        <div id="maxGapWarning" class="filter-warning" style="display: none;">
+                            ⚠️ Gap above 5 seconds may allow timeline holes
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="coverageThreshold">Coverage Threshold (%):</label>
+                        <input type="number" id="coverageThreshold" placeholder="95" min="0" max="100" step="1" value="95">
+                        <div id="coverageWarning" class="filter-warning" style="display: none;">
+                            ⚠️ Threshold below 80% may remove useful clips
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Form Fields -->
+            <div class="input-group">
+                <label for="channelId">Streamer ID/Username:</label>
+                <input type="text" id="channelId" placeholder="Enter Streamer ID/Username">
+            </div>
+            
+            <div class="input-group">
+                <label for="startDate">Start:</label>
+                <input type="datetime-local" id="startDate">
+            </div>
+            
+            <div class="input-group">
+                <label for="endDate">End:</label>
+                <input type="datetime-local" id="endDate">
+            </div>
+            
+            <div id="sizeEstimate" class="size-estimate" style="display: none;"></div>
+            
+            <div class="button-group">
+                <button id="button1" class="btn btn-primary">Download Range</button>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 11px; color: #666;">
+                        <input type="range" id="scanDuration" min="5" max="15" step="1" value="10" 
+                               style="flex: 1; height: 4px; cursor: pointer;">
+                        <span id="scanDurationLabel" style="min-width: 28px; text-align: right; font-weight: 600;">10s</span>
+                    </div>
+                    <button id="button2" class="btn btn-secondary" style="width: 100%;">Scan Range</button>
+                </div>
+            </div>
+            
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
