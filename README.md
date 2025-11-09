@@ -234,15 +234,7 @@ estimatedSize = totalDuration × 698,665 bytes/second
 // Based on empirical analysis of Twitch clip data
 ```
 
-#### 3. **content.js** - Content Script
-- Currently minimal (placeholder for future features)
-- Loaded on Twitch pages
-- Could be extended for:
-  - Auto-detecting stream info
-  - Injecting UI elements
-  - Capturing clip metadata
-
-#### 4. **popup.html/css** - Interface Design
+#### 3. **popup.html/css** - Interface Design
 - Clean, modern UI with Twitch purple theme
 - Collapsible sections for organization
 - Real-time validation feedback
@@ -281,13 +273,13 @@ Result: Downloads ONLY clips created by these users
 
 **Coverage Threshold** (default: 95%)
 - Percentage of clip that must be covered by others to be removed
-- Higher = more aggressive filtering
-- Lower = keeps more clips
+- Higher = keeps more clips (less aggressive filtering)
+- Lower = removes more clips (more aggressive filtering)
 
 Examples:
-- `95%`: Very aggressive - removes nearly duplicate clips
-- `80%`: Moderate - keeps clips with 20%+ unique content
-- `50%`: Conservative - only removes highly redundant clips
+- `95%`: Conservative - only removes clips that are 95%+ covered (keeps more clips)
+- `80%`: Moderate - removes clips that are 80%+ covered
+- `50%`: Aggressive - removes clips that are 50%+ covered (filters out more clips)
 
 **Max Acceptable Gap** (default: 0 seconds)
 - Maximum gap allowed in timeline coverage
@@ -295,8 +287,7 @@ Examples:
 
 Examples:
 - `0s`: No gaps allowed - ensures complete timeline
-- `5s`: Allows small gaps - more flexible filtering
-- `15s`: Allows larger gaps - very flexible
+- `5s`: Allows small gaps - removes more clips but can leave holes
 
 **Warning Indicators:**
 - 🟡 Max Gap > 5s: May allow timeline holes
@@ -306,11 +297,18 @@ Examples:
 
 Controls how long multi-pass discovery runs (5-15 seconds):
 
-- **5s**: Fast, good for small date ranges
+- **5s**: Fast, good for small date ranges or small channels
 - **10s**: Balanced (recommended)
-- **15s**: Thorough, best for large date ranges
+- **15s**: Thorough, best for large date ranges or larger channels
 
-More passes = potentially more clips discovered, especially for high-traffic channels.
+**Why Multiple Passes Matter:**
+
+Twitch's clip discovery API orders clips by view count, which can change in real-time. A clip that gains views during your scan could shift position in the results, potentially causing it to be missed by a single pass. Running multiple delayed passes helps catch clips that move around in the rankings, ensuring more complete discovery.
+
+More passes = potentially more clips discovered, especially for high-traffic channels where view counts change frequently.
+
+
+
 
 ### Caching System
 
@@ -354,11 +352,6 @@ More passes = potentially more clips discovered, especially for high-traffic cha
    - Verify channel name/ID is correct
    - Try using channel ID instead of username
 
-4. **Rate Limiting**
-   - Twitch API has rate limits
-   - Wait 1-2 minutes and try again
-   - Reduce scan duration
-
 #### ❌ "No clips found"
 
 **Possible Causes:**
@@ -370,10 +363,6 @@ More passes = potentially more clips discovered, especially for high-traffic cha
 2. **Account Filtering**
    - Whitelist may be too restrictive
    - Check list mode and account names
-
-3. **VOD Deleted**
-   - Clips require VOD data
-   - If VOD is deleted, clips may not be discoverable
 
 #### ⚠️ Size estimate unavailable
 
@@ -394,9 +383,6 @@ More passes = potentially more clips discovered, especially for high-traffic cha
 2. **Disk Space**
    - Verify sufficient free space
 
-3. **Pop-up Blocker**
-   - Disable for Twitch if enabled
-
 #### 🐌 Slow downloads
 
 **Optimization:**
@@ -408,24 +394,6 @@ More passes = potentially more clips discovered, especially for high-traffic cha
 2. **Parallel Downloads**
    - Extension already uses optimal parallelization
    - Downloads run at ~3 concurrent
-
-3. **Large Collections**
-   - 100+ clips may take time
-   - Consider splitting date range
-
-### Getting Help
-
-1. **Check browser console** (F12 → Console)
-   - Look for error messages
-   - Check Network tab for failed requests
-
-2. **Verify credentials**
-   - Test OAuth token with Twitch API directly
-   - Ensure correct permissions (clips:edit scope)
-
-3. **Test with known channel**
-   - Try a popular channel with many clips
-   - Narrows down if issue is channel-specific
 
 ---
 
@@ -504,60 +472,39 @@ IV: 12 bytes random (unique per encryption)
 
 ### API Rate Limits
 
-Twitch Helix API limits:
-- **800 requests per minute** (App token)
-- **120 requests per minute** (User token)
+Twitch API has a rate limit of **100 download URLs requested per minute** for clip downloads.
 
 NACDA handles this by:
-- Staggered requests (500ms delay)
-- Exponential backoff on errors
-- Request batching
-- Efficient pagination
+- Staggered requests (500ms delay between batches)
+- Ensures we stay well under the rate limit
+- Request batching for efficiency
+- Efficient pagination for clip discovery
 
 ### File Naming
 
 Downloaded clips use format:
 ```
-{creator_name}_{title}_{clip_id}.mp4
+{creation_date}_{clip_title}_{clipper_name}_{clip_SLUG}.mp4
+
+A future update will allow for custom naming formats
 ```
 
 Example:
 ```
-shroud_insane_headshot_xyz123abc.mp4
+2025-10-31_Most subtle August_Anomaly plug_NeonVchewbuh_UseCodeAugyForTenPercentOffAtCheckout-QbZ4AoHxiTmaaBMb.mp4
 ```
 
 ### Browser Compatibility
 
-**Tested:**
-- ✅ Chrome 88+
-- ✅ Edge 88+
-- ✅ Brave
-
-**Should Work:**
-- Chromium-based browsers with Manifest V3 support
+**Compatible with Chromium-based browsers only:**
+- ✅ Google Chrome
+- ✅ Microsoft Edge
+- ✅ Brave Browser
 
 **Not Compatible:**
-- Firefox (different extension API)
-- Safari (different extension API)
-
----
-
-## 📝 Version History
-
-### v1.1 (Current)
-- Multi-pass clip discovery
-- Intelligent caching system
-- Advanced redundancy filtering
-- Size estimation with 698KB/s constant
-- Encrypted credential storage
-- Whitelist/blacklist filtering
-- Adjustable scan duration
-- Real-time progress tracking
-
-### v1.0
-- Initial release
-- Basic clip downloading
-- Simple filtering
+- ❌ Firefox (different extension API)
+- ❌ Safari (different extension API)
+- ❌ Any non-Chromium browser
 
 ---
 
@@ -575,7 +522,7 @@ This project is provided as-is for educational and personal use.
 
 ## 🙏 Credits
 
-**Created by**: Neon
+**Created by**: NeonVchewbuh
 
 **Built with:**
 - Twitch Helix API
@@ -585,27 +532,7 @@ This project is provided as-is for educational and personal use.
 **Special Thanks:**
 - Twitch for providing comprehensive API access
 - The open-source community for tools and libraries
+- Github CoPilot for trying to leak my API keys twice
 
 ---
 
-## 🚀 Future Ideas
-
-Potential enhancements (not yet implemented):
-
-- 📦 Batch channel processing
-- 🎨 Custom clip naming templates
-- 📊 Metadata export (CSV/JSON)
-- 🎞️ Quality/resolution selection
-- 📱 Mobile companion app
-- 🔄 Auto-sync features
-- 🌙 Dark/light theme toggle
-- 📈 Download history tracking
-- 🔔 Notification system
-- ⚙️ Advanced scheduling
-
----
-
-**Questions? Issues? Ideas?**  
-Open an issue on GitHub or check the troubleshooting section above.
-
-**Happy Clipping! 🎬**
