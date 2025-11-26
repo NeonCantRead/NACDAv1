@@ -834,7 +834,13 @@ button2.addEventListener('click', async () => {
         if (response.success) {
             const totalFiltered = response.originalCount - response.count;
             displaySizeEstimate(response.totalDuration, response.originalCount, totalFiltered);
-            clearStatus();
+            
+            // Show warning if partial filtering was applied
+            if (response.partialFilteringApplied && response.nullOffsetCount > 0) {
+                showStatus(`⚠️ Warning: ${response.nullOffsetCount} clip${response.nullOffsetCount > 1 ? 's' : ''} missing timeline data - kept without filtering`, 'info');
+            } else {
+                clearStatus();
+            }
         } else {
             hideSizeEstimate();
             showStatus(`Error: ${response.error}`, 'error');

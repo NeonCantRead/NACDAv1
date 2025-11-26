@@ -146,14 +146,35 @@ async function handleButton1Action(data, tabId) {
         
         console.log(`Starting redundancy filtering on ${clips.length} clips...`);
         
-        // Filter out redundant clips (clips fully contained within other clips)
-        const filteredClips = filterRedundantClips(
-            clips,
-            data.maxGap || 0,
-            data.coverageThreshold || 0.95
-        );
+        // Separate clips with and without offset data
+        const clipsWithNullOffset = clips.filter(clip => clip.vod_offset === null || clip.vod_offset === undefined);
+        const clipsWithValidOffset = clips.filter(clip => clip.vod_offset !== null && clip.vod_offset !== undefined);
         
-        console.log(`Filtering complete: ${clips.length} → ${filteredClips.length} clips (${clips.length - filteredClips.length} total clips removed)`);
+        let filteredClips;
+        
+        if (clipsWithNullOffset.length > 0) {
+            console.warn(`⚠️ ${clipsWithNullOffset.length} clips have null vod_offset - these will be kept without filtering`);
+            sendProgress(`⚠️ Warning: ${clipsWithNullOffset.length}/${clips.length} clips missing timeline data - filtering only clips with valid offsets`);
+            
+            // Filter only clips with valid offsets
+            const filteredValidOffsetClips = filterRedundantClips(
+                clipsWithValidOffset,
+                data.maxGap || 0,
+                data.coverageThreshold || 0.95
+            );
+            
+            // Combine filtered clips with null offset clips
+            filteredClips = [...filteredValidOffsetClips, ...clipsWithNullOffset];
+            console.log(`Filtering complete: ${clipsWithValidOffset.length} clips with offsets → ${filteredValidOffsetClips.length} (${clipsWithValidOffset.length - filteredValidOffsetClips.length} removed), ${clipsWithNullOffset.length} null offset clips kept`);
+        } else {
+            // All clips have valid offsets, filter normally
+            filteredClips = filterRedundantClips(
+                clips,
+                data.maxGap || 0,
+                data.coverageThreshold || 0.95
+            );
+            console.log(`Filtering complete: ${clips.length} → ${filteredClips.length} clips (${clips.length - filteredClips.length} total clips removed)`);
+        }
         
         // Download the filtered clips
         console.log('Starting download process...');
@@ -200,12 +221,35 @@ async function handleButton2Action(data) {
         
         console.log(`Account filtering complete: ${clips.length} → ${accountFilteredClips.length} clips (${clips.length - accountFilteredClips.length} filtered by account list)`);
         
-        // Apply redundancy filtering
-        const filteredClips = filterRedundantClips(
-            accountFilteredClips,
-            data.maxGap || 0,
-            data.coverageThreshold || 0.95
-        );
+        // Separate clips with and without offset data
+        const clipsWithNullOffset = accountFilteredClips.filter(clip => clip.vod_offset === null || clip.vod_offset === undefined);
+        const clipsWithValidOffset = accountFilteredClips.filter(clip => clip.vod_offset !== null && clip.vod_offset !== undefined);
+        
+        let filteredClips;
+        let partialFilteringApplied = false;
+        
+        if (clipsWithNullOffset.length > 0) {
+            console.warn(`⚠️ ${clipsWithNullOffset.length} clips have null vod_offset - filtering only clips with valid offsets`);
+            partialFilteringApplied = true;
+            
+            // Filter only clips with valid offsets
+            const filteredValidOffsetClips = filterRedundantClips(
+                clipsWithValidOffset,
+                data.maxGap || 0,
+                data.coverageThreshold || 0.95
+            );
+            
+            // Combine filtered clips with null offset clips
+            filteredClips = [...filteredValidOffsetClips, ...clipsWithNullOffset];
+            console.log(`Filtering complete: ${clipsWithValidOffset.length} clips with offsets → ${filteredValidOffsetClips.length} (${clipsWithValidOffset.length - filteredValidOffsetClips.length} removed), ${clipsWithNullOffset.length} null offset clips kept`);
+        } else {
+            // All clips have valid offsets, filter normally
+            filteredClips = filterRedundantClips(
+                accountFilteredClips,
+                data.maxGap || 0,
+                data.coverageThreshold || 0.95
+            );
+        }
         
         console.log(`All filtering complete: ${clips.length} → ${filteredClips.length} clips total`);
         
@@ -232,7 +276,9 @@ async function handleButton2Action(data) {
             originalCount: clips.length,
             message: `Found ${filteredClips.length} clips`,
             totalDuration: totalDuration,
-            scanDurationMs: scanDuration * 1000 // Convert seconds to ms
+            scanDurationMs: scanDuration * 1000, // Convert seconds to ms
+            partialFilteringApplied: partialFilteringApplied,
+            nullOffsetCount: clipsWithNullOffset.length
         };
     } catch (error) {
         console.error('Error in clip discovery:', error);
