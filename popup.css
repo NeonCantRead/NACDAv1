@@ -387,3 +387,25 @@ input[type="range"]::-moz-range-thumb {
 input[type="range"]::-moz-range-thumb:hover {
     background: #5a6268;
 }
+
+/* Auth expired banner */
+.auth-expired-banner {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.auth-expired-banner a {
+    color: #0056b3;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-expired-banner a:hover {
+    text-decoration: underline;
+}

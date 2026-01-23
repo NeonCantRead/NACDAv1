@@ -21,6 +21,7 @@ const scanDurationInput = document.getElementById('scanDuration');
 const scanDurationLabel = document.getElementById('scanDurationLabel');
 const statusMessage = document.getElementById('statusMessage');
 const sizeEstimate = document.getElementById('sizeEstimate');
+const authExpiredBanner = document.getElementById('authExpiredBanner');
 
 // Collapsible sections
 const credentialsToggle = document.getElementById('credentialsToggle');
@@ -49,6 +50,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'downloadProgress') {
         button1.textContent = request.message;
     }
+    if (request.action === 'authExpired') {
+        authExpiredBanner.style.display = 'block';
+        clearStatus();
+    }
 });
 
 // Function to show status message (key entry screen)
@@ -67,6 +72,12 @@ function showStatus(message, type = 'info') {
 function clearStatus() {
     statusMessage.textContent = '';
     statusMessage.className = 'status-message';
+}
+
+// Hide OAuth-expired banner
+function hideAuthExpiredBanner() {
+    if (!authExpiredBanner) return;
+    authExpiredBanner.style.display = 'none';
 }
 
 // Function to calculate and display estimated download size

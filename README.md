@@ -346,7 +346,7 @@ More passes = potentially more clips discovered, especially for high-traffic cha
 
 2. **Expired OAuth Token**
    - Tokens can expire
-   - Generate a new token (see Setup Guide)
+   - If you see an OAuth-expired prompt, generate a new token at https://twitchapps.com/tokengen/
 
 3. **Invalid Channel**
    - Verify channel name/ID is correct

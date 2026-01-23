@@ -726,7 +726,11 @@ async function getClipDownloadUrls(clips, broadcasterId, editorId, clientId, oau
                 'Client-Id': clientId
             }
         });
-        
+
+        if (response.status === 401) {
+            notifyAuthExpired();
+            throw new Error('Unauthorized: OAuth token expired or invalid. Generate a new token at https://twitchapps.com/tokengen/');
+        }
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`API Error Response:`, errorBody);
@@ -781,6 +785,16 @@ async function downloadClip(urlData, clipInfo) {
     });
 }
 
+// Notify user about expired/invalid OAuth token
+function notifyAuthExpired() {
+    chrome.runtime.sendMessage({
+        action: 'authExpired',
+        message: 'Your Twitch OAuth token is invalid or expired. Please generate a new one at https://twitchapps.com/tokengen/'
+    }).catch(() => {
+        // Ignore errors if popup is closed
+    });
+}
+
 // Fetch a single page of clips
 async function fetchClipsPage(broadcasterId, userId, oauthToken, startDate, endDate, cursor = null) {
     return await retryWithBackoff(async () => {
@@ -804,7 +818,11 @@ async function fetchClipsPage(broadcasterId, userId, oauthToken, startDate, endD
                 'Client-Id': userId
             }
         });
-        
+
+        if (response.status === 401) {
+            notifyAuthExpired();
+            throw new Error('Unauthorized: OAuth token expired or invalid. Generate a new token at https://twitchapps.com/tokengen/');
+        }
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
